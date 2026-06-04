@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa da Vida Equilibrada</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #faf6f0;
+  --warm-white: #fff9f3;
+  --terracotta: #c4613a;
+  --terracotta-light: #e8895f;
+  --terracotta-pale: #f5e4db;
+  --sage: #6b8c6e;
+  --sage-light: #a8c4ab;
+  --sage-pale: #e8f0e9;
+  --gold: #c9922a;
+  --gold-pale: #f5e8d0;
+  --ink: #2a1f1a;
+  --ink-mid: #5a4a42;
+  --ink-light: #9a8a82;
+  --border: rgba(42,31,26,0.1);
+  --shadow: 0 4px 24px rgba(42,31,26,0.08);
+  --shadow-lg: 0 12px 48px rgba(42,31,26,0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BG texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* SCREENS */
+.screen {
+  display: none;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  padding: 2rem 1.2rem 4rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.screen.active { display: flex; }
+.screen-scroll { justify-content: flex-start; padding-top: 3rem; }
+
+/* CARD */
+.card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 2.2rem;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 560px;
+}
+
+/* TYPOGRAPHY */
+.display {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  color: var(--ink);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.display em { color: var(--terracotta); font-style: italic; }
+
+.heading {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.3rem, 4vw, 1.7rem);
+  color: var(--ink);
+  line-height: 1.3;
+}
+.heading em { color: var(--terracotta); font-style: italic; }
+
+.body { font-size: 1rem; line-height: 1.75; color: var(--ink-mid); }
+.body strong { color: var(--ink); font-weight: 600; }
+.label { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-light); font-weight: 500; }
+
+/* DIVIDER */
+.divider { width: 40px; height: 2px; background: var(--terracotta); border-radius: 2px; margin: 1.2rem 0; opacity: 0.5; }
+
+/* BUTTONS */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  width: 100%; padding: 1rem 1.8rem;
+  border: none; border-radius: 50px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+  transition: all 0.25s; -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.02em;
+}
+.btn-primary {
+  background: var(--terracotta);
+  color: white;
+}
+.btn-primary:hover { background: #b5552f; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(196,97,58,0.3); }
+.btn-ghost {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--ink-mid);
+}
+.btn-ghost:hover { border-color: var(--terracotta); color: var(--terracotta); }
+.btn-whatsapp {
+  background: #25D366;
+  color: white;
+  font-size: 1rem;
+}
+.btn-whatsapp:hover { background: #1ebe59; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(37,211,102,0.3); }
+
+/* INPUT */
+.input-group { margin-bottom: 1.2rem; }
+.input-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-mid); margin-bottom: 0.45rem; }
+input[type=text] {
+  width: 100%; padding: 0.85rem 1.1rem;
+  background: var(--cream); border: 1.5px solid var(--border);
+  border-radius: 12px; font-family: 'DM Sans', sans-serif;
+  font-size: 1rem; color: var(--ink); outline: none;
+  transition: border-color 0.25s;
+}
+input:focus { border-color: var(--terracotta); }
+input::placeholder { color: var(--ink-light); }
+
+/* AREA SELECTOR */
+.area-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-bottom: 1.5rem; }
+.area-card {
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 1rem 0.8rem;
+  cursor: pointer; transition: all 0.22s; text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.area-card:hover { border-color: var(--terracotta); background: var(--terracotta-pale); }
+.area-card.selected { border-color: var(--terracotta); background: var(--terracotta-pale); }
+.area-card .area-icon { font-size: 1.6rem; margin-bottom: 0.4rem; display: block; }
+.area-card .area-name { font-size: 0.82rem; font-weight: 600; color: var(--ink); line-height: 1.3; }
+
+/* PROGRESS */
+.progress-bar-wrap {
+  width: 100%; max-width: 560px;
+  background: var(--border);
+  border-radius: 50px; height: 4px;
+  margin-bottom: 2rem; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; background: var(--terracotta);
+  border-radius: 50px; transition: width 0.5s ease;
+}
+.progress-label {
+  font-size: 0.75rem; color: var(--ink-light);
+  margin-bottom: 0.6rem; text-align: center;
+}
+
+/* QUESTION CARD */
+.question-area-tag {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: var(--terracotta-pale);
+  color: var(--terracotta);
+  border-radius: 50px; padding: 0.3rem 0.8rem;
+  font-size: 0.75rem; font-weight: 600;
+  margin-bottom: 1.2rem;
+}
+.question-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.1rem, 3.5vw, 1.35rem);
+  color: var(--ink); line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+/* AXES */
+.axes-grid { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
+.axis-row {
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 1rem 1.1rem;
+}
+.axis-question { font-size: 0.82rem; font-weight: 600; color: var(--ink-mid); margin-bottom: 0.7rem; }
+.axis-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.axis-btn {
+  padding: 0.6rem 0.5rem; border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 500;
+  color: var(--ink-mid); transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+}
+.axis-btn:hover { border-color: var(--terracotta); color: var(--terracotta); }
+.axis-btn.selected-yes { background: var(--sage-pale); border-color: var(--sage); color: var(--sage); font-weight: 600; }
+.axis-btn.selected-no { background: var(--terracotta-pale); border-color: var(--terracotta); color: var(--terracotta); font-weight: 600; }
+
+/* NAV BUTTONS */
+.nav-row { display: flex; gap: 0.7rem; margin-top: 1rem; }
+.nav-row .btn-ghost { flex: 0 0 auto; width: auto; padding: 0.85rem 1.4rem; }
+.nav-row .btn-primary { flex: 1; }
+
+/* RESULTS */
+.result-area-card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 1.8rem;
+  margin-bottom: 1.2rem;
+  box-shadow: var(--shadow);
+}
+.result-area-header {
+  display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.2rem;
+}
+.result-area-icon { font-size: 1.5rem; }
+.result-area-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--ink); }
+
+/* THERMOMETER */
+.thermo-wrap { margin-bottom: 1.4rem; }
+.thermo-label-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--ink-light); margin-bottom: 0.4rem; }
+.thermo-track { background: var(--border); border-radius: 50px; height: 10px; overflow: hidden; }
+.thermo-fill { height: 100%; border-radius: 50px; transition: width 1s ease; }
+.thermo-score { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--ink); margin-top: 0.4rem; }
+.thermo-desc { font-size: 0.82rem; color: var(--ink-light); margin-top: 0.1rem; }
+
+/* QUADRANT LISTS */
+.quadrant-section { margin-bottom: 1.2rem; }
+.quadrant-title {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 0.6rem;
+}
+.quadrant-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.quadrant-items { display: flex; flex-direction: column; gap: 0.4rem; }
+.quadrant-item {
+  font-size: 0.88rem; color: var(--ink-mid);
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px; line-height: 1.4;
+}
+.q-blocked .quadrant-title { color: var(--terracotta); }
+.q-blocked .quadrant-dot { background: var(--terracotta); }
+.q-blocked .quadrant-item { background: var(--terracotta-pale); }
+.q-auto .quadrant-title { color: var(--gold); }
+.q-auto .quadrant-dot { background: var(--gold); }
+.q-auto .quadrant-item { background: var(--gold-pale); }
+.q-aligned .quadrant-title { color: var(--sage); }
+.q-aligned .quadrant-dot { background: var(--sage); }
+.q-aligned .quadrant-item { background: var(--sage-pale); }
+
+.quadrant-text { font-size: 0.88rem; color: var(--ink-mid); line-height: 1.65; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+
+/* GENERAL RESULT */
+.general-card {
+  background: linear-gradient(135deg, #2a1f1a 0%, #4a3025 100%);
+  border-radius: 24px; padding: 2.2rem;
+  color: white; margin-bottom: 1.2rem;
+  box-shadow: var(--shadow-lg);
+}
+.general-card .heading { color: white; }
+.general-card .body { color: rgba(255,255,255,0.82); }
+
+/* CTA CARD */
+.cta-card {
+  background: var(--terracotta-pale);
+  border: 1.5px solid rgba(196,97,58,0.2);
+  border-radius: 24px; padding: 2rem;
+  text-align: center; margin-bottom: 1.5rem;
+}
+
+/* NOTICE */
+.notice {
+  background: var(--sage-pale);
+  border: 1px solid rgba(107,140,110,0.25);
+  border-radius: 12px; padding: 1rem 1.2rem;
+  font-size: 0.8rem; color: var(--ink-mid);
+  line-height: 1.6; margin-bottom: 1.5rem;
+}
+.notice strong { color: var(--sage); }
+
+/* ANIMATIONS */
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+.au { animation: fadeUp 0.5s ease both; }
+.ai { animation: fadeIn 0.4s ease both; }
+.d1{animation-delay:.08s;}.d2{animation-delay:.16s;}.d3{animation-delay:.24s;}.d4{animation-delay:.32s;}.d5{animation-delay:.4s;}
+
+/* UTILS */
+.mt1{margin-top:.5rem;}.mt2{margin-top:1rem;}.mt3{margin-top:1.5rem;}.mt4{margin-top:2rem;}
+.mb1{margin-bottom:.5rem;}.mb2{margin-bottom:1rem;}.mb3{margin-bottom:1.5rem;}
+.tc{text-align:center;}
+.w100{width:100%;}
+.mxw{max-width:560px;width:100%;}
+.flex-col{display:flex;flex-direction:column;}
+.gap1{gap:.5rem;}.gap2{gap:1rem;}
+
+/* FOOTER */
+footer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(250,246,240,0.92);
+  border-top: 1px solid var(--border);
+  padding: 0.5rem 1rem; text-align: center;
+  font-size: 0.62rem; color: var(--ink-light);
+  backdrop-filter: blur(8px); z-index: 100;
+}
+</style>
+</head>
+<body>
+
+<!-- SCREEN: WELCOME -->
+<div class="screen active" id="s-welcome">
+  <div class="mxw">
+    <div class="au tc mb3">
+      <div class="label mb2">Stefane Rodrigues · Psicóloga Clínica</div>
+      <div class="display mb2">Mapa da <em>Vida Equilibrada</em></div>
+    </div>
+
+    <div class="notice au d1">
+      <strong>Aviso importante:</strong> Essa não é uma ferramenta diagnóstica e não substitui acompanhamento profissional. É um recurso de autoconhecimento criado pra te ajudar a visualizar padrões. Use como ponto de partida, não como conclusão.
+    </div>
+
+    <div class="card au d2">
+      <div class="body mb3">
+        É difícil dar conta de tudo, né?<br><br>
+        Essa ferramenta foi criada pra te ajudar a mapear como você tem gerenciado tudo por aí. Sabe aqueles padrões que a gente vai só vivendo no automático? A gente vai entender em que área você tem colocado mais energia, se isso está equilibrado e como ajustar.<br><br>
+        <strong>Bora?</strong>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Como você quer ser chamado(a)?</label>
+        <input type="text" id="inp-name" placeholder="Seu nome ou apelido..." maxlength="30" onkeydown="if(event.key==='Enter')goToAreas()">
+      </div>
+      <button class="btn btn-primary" onclick="goToAreas()">Começar o mapeamento →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: AREA SELECT -->
+<div class="screen" id="s-areas">
+  <div class="mxw">
+    <div class="tc mb3 au">
+      <div class="label mb1">Passo 1 de 3</div>
+      <div class="heading mb2">Quais áreas você quer <em>mapear?</em></div>
+      <div class="body">Selecione as que fazem sentido pra você agora. Pode ser uma ou todas.</div>
+    </div>
+
+    <div class="area-grid au d1">
+      <div class="area-card" data-area="amor" onclick="toggleArea(this)">
+        <span class="area-icon">💑</span>
+        <div class="area-name">Relacionamento amoroso</div>
+      </div>
+      <div class="area-card" data-area="familia" onclick="toggleArea(this)">
+        <span class="area-icon">👨‍👩‍👧</span>
+        <div class="area-name">Família</div>
+      </div>
+      <div class="area-card" data-area="amizades" onclick="toggleArea(this)">
+        <span class="area-icon">👯</span>
+        <div class="area-name">Amizades</div>
+      </div>
+      <div class="area-card" data-area="eu" onclick="toggleArea(this)">
+        <span class="area-icon">🪞</span>
+        <div class="area-name">Relação comigo mesmo(a)</div>
+      </div>
+      <div class="area-card" data-area="trabalho" onclick="toggleArea(this)" style="grid-column:1/-1">
+        <span class="area-icon">💼</span>
+        <div class="area-name">Trabalho e vida profissional</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary au d2" onclick="goToQuestions()">Continuar →</button>
+  </div>
+</div>
+
+<!-- SCREEN: QUESTIONS -->
+<div class="screen screen-scroll" id="s-questions">
+  <div class="mxw">
+    <div class="progress-label" id="q-progress-label">Área 1 de 3 · Pergunta 1 de 10</div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="q-progress-fill" style="width:0%"></div></div>
+
+    <div class="card au" id="q-card">
+      <div class="question-area-tag" id="q-area-tag">💑 Relacionamento</div>
+      <div class="question-text" id="q-text">—</div>
+
+      <div class="axes-grid">
+        <div class="axis-row">
+          <div class="axis-question">Você <strong>gosta</strong> de fazer isso?</div>
+          <div class="axis-options">
+            <button class="axis-btn" id="like-yes" onclick="selectAxis('like','yes')">✓ Sim, gosto</button>
+            <button class="axis-btn" id="like-no" onclick="selectAxis('like','no')">✗ Não gosto</button>
+          </div>
+        </div>
+        <div class="axis-row">
+          <div class="axis-question">Você <strong>faz</strong> isso?</div>
+          <div class="axis-options">
+            <button class="axis-btn" id="do-yes" onclick="selectAxis('do','yes')">✓ Sim, faço</button>
+            <button class="axis-btn" id="do-no" onclick="selectAxis('do','no')">✗ Não faço</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn btn-ghost" id="q-back-btn" onclick="prevQuestion()">← Voltar</button>
+        <button class="btn btn-primary" id="q-next-btn" onclick="nextQuestion()" disabled>Próxima →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: RESULTS -->
+<div class="screen screen-scroll" id="s-results">
+  <div class="mxw">
+    <div class="tc mb3 au">
+      <div class="label mb1">Seu resultado</div>
+      <div class="heading mb1">Mapa da <em>Vida Equilibrada</em></div>
+      <div class="body" id="result-greeting">—</div>
+    </div>
+
+    <div id="result-areas"></div>
+
+    <div class="general-card au mb3">
+      <div class="label mb2" style="color:rgba(255,255,255,0.5)">Visão geral</div>
+      <div class="heading mb2">O que esse mapa diz sobre você</div>
+      <div class="body" id="result-general">—</div>
+    </div>
+
+    <div class="cta-card au">
+      <div class="heading mb2" style="font-size:1.2rem">Isso que você acabou de ver<br>merece mais do que uma tela.</div>
+      <div class="body mb3">Se alguma coisa aqui tocou em algo que você carrega há tempo, a terapia pode ser o espaço pra você olhar pra isso com calma, sem julgamento e com apoio.</div>
+      <button class="btn btn-whatsapp" onclick="goWhatsApp()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Quero entender isso mais fundo na psicoterapia
+      </button>
+    </div>
+
+    <button class="btn btn-ghost" onclick="restart()">↩ Fazer novamente</button>
+  </div>
+</div>
+
+<footer>Me. Stefane Rodrigues · Psicóloga Clínica · CRP 05/73756 · Não substitui acompanhamento profissional</footer>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const AREAS = {
+  amor: {
+    name: 'Relacionamento amoroso',
+    icon: '💑',
+    questions: [
+      'Falo o que sinto quando estou magoado(a)',
+      'Peço o que preciso sem esperar que a outra pessoa adivinhe',
+      'Consigo ouvir o outro sem me defender antes de entender',
+      'Tenho espaço pra ser quem eu sou dentro da relação',
+      'Expresso carinho e afeto de forma ativa',
+      'Consigo colocar limites quando algo me incomoda',
+      'Resolvo conflitos sem deixar acumular',
+      'Me sinto visto(a) e valorizado(a) na relação',
+      'Consigo pedir desculpas quando erro',
+      'Tenho tempo e energia pra investir na relação'
+    ]
+  },
+  familia: {
+    name: 'Família',
+    icon: '👨‍👩‍👧',
+    questions: [
+      'Consigo dizer não para pessoas da família quando preciso',
+      'Me expresso com honestidade nas conversas em família',
+      'Consigo me distanciar emocionalmente quando necessário, sem culpa',
+      'Tenho espaço pra ser quem eu sou com a minha família',
+      'Consigo pedir apoio emocional pra alguém da família',
+      'Resolvo desentendimentos em vez de evitar o assunto',
+      'Mantenho vínculos sem me perder neles',
+      'Consigo receber críticas da família sem desmoronar',
+      'Coloco limites quando algum comportamento me faz mal',
+      'Me sinto pertencente à minha família sem precisar me anular'
+    ]
+  },
+  amizades: {
+    name: 'Amizades',
+    icon: '👯',
+    questions: [
+      'Estou presente de verdade nas amizades que tenho',
+      'Peço ajuda quando estou mal, em vez de sumir',
+      'Consigo dizer o que penso mesmo quando diverge do amigo',
+      'Mantenho amizades sem depender delas pra me sentir bem',
+      'Consigo estabelecer limites sem medo de perder a amizade',
+      'Me permito ser vulnerável com pessoas próximas',
+      'Invisto tempo nas amizades que me fazem bem',
+      'Consigo deixar ir amizades que me esgotam',
+      'Me sinto à vontade pra ser eu mesmo(a) com os amigos',
+      'Expresso gratidão e afeto pelas pessoas que gosto'
+    ]
+  },
+  eu: {
+    name: 'Relação comigo mesmo(a)',
+    icon: '🪞',
+    questions: [
+      'Consigo descansar sem sentir culpa',
+      'Me trato com a mesma gentileza que trato as pessoas que amo',
+      'Reconheço minhas conquistas sem minimizar',
+      'Consigo pedir ajuda quando preciso, sem ver isso como fraqueza',
+      'Tenho tempo pra fazer coisas que me fazem bem',
+      'Ouço meu corpo quando ele pede pausa',
+      'Consigo dizer não sem me sentir egoísta',
+      'Me conheço bem o suficiente pra saber o que preciso',
+      'Cuido da minha saúde mental de forma ativa',
+      'Tenho uma relação de respeito com meus próprios limites'
+    ]
+  },
+  trabalho: {
+    name: 'Trabalho e vida profissional',
+    icon: '💼',
+    questions: [
+      'Consigo separar trabalho da vida pessoal',
+      'Me posiciono quando discordo de algo no trabalho',
+      'Peço ajuda quando não sei fazer algo',
+      'Reconheço meu valor profissional',
+      'Consigo desligar do trabalho fora do horário',
+      'Tenho energia pra fazer o que precisa ser feito',
+      'Me sinto realizado(a) com o que faço',
+      'Coloco limites quando a demanda é maior do que consigo',
+      'Cuido da minha saúde dentro da rotina de trabalho',
+      'Tenho espaço pra crescer e me desenvolver'
+    ]
+  }
+};
+
+const QUADRANT_TEXTS = {
+  blocked: 'Aqui mora algo importante: você sabe o que quer, sabe o que faria bem — mas algo impede. Pode ser medo, pode ser um padrão antigo, pode ser uma crença que você nem percebe mais que carrega. Esse espaço entre quem você é e quem você quer ser merece atenção.',
+  auto: 'Esses são padrões que você repete sem querer. Você age, mas sabe que não é isso que quer pra si. Às vezes a gente continua fazendo porque tem medo do que acontece se parar. Às vezes porque nunca parou pra questionar. Esse quadrante costuma ser onde o esgotamento mora.',
+  aligned: 'Aqui você está agindo de acordo com o que acredita. Não é pouca coisa — significa que você construiu, consciente ou não, um jeito de viver que combina com quem você é. Vale reconhecer isso.'
+};
+
+const THERMO_TEXT = {
+  high: 'Essa área está bastante integrada. Você age de acordo com o que sente e quer.',
+  mid: 'Tem coisas funcionando bem aqui, mas também há tensão. Alguns padrões podem estar pedindo revisão.',
+  low: 'Essa área pode estar te custando energia sem que você perceba. Vale olhar com mais cuidado.'
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let userName = '';
+let selectedAreas = [];
+let answers = {}; // { areaKey: [ {like: 'yes'|'no', do: 'yes'|'no'}, ... ] }
+let currentAreaIdx = 0;
+let currentQuestionIdx = 0;
+let currentLike = null;
+let currentDo = null;
+
+// ============================================================
+// UTILS
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function toast(msg) {
+  // simple inline alert style
+  alert(msg);
+}
+
+// ============================================================
+// WELCOME
+// ============================================================
+function goToAreas() {
+  const name = document.getElementById('inp-name').value.trim();
+  if (!name) { document.getElementById('inp-name').focus(); return; }
+  userName = name;
+  showScreen('s-areas');
+}
+
+// ============================================================
+// AREA SELECT
+// ============================================================
+function toggleArea(el) {
+  el.classList.toggle('selected');
+}
+
+function goToQuestions() {
+  selectedAreas = Array.from(document.querySelectorAll('.area-card.selected'))
+    .map(el => el.dataset.area);
+  if (selectedAreas.length === 0) {
+    alert('Selecione pelo menos uma área para continuar.');
+    return;
+  }
+  // Init answers
+  answers = {};
+  selectedAreas.forEach(a => { answers[a] = []; });
+  currentAreaIdx = 0;
+  currentQuestionIdx = 0;
+  showScreen('s-questions');
+  renderQuestion();
+}
+
+// ============================================================
+// QUESTIONS
+// ============================================================
+function renderQuestion() {
+  const areaKey = selectedAreas[currentAreaIdx];
+  const area = AREAS[areaKey];
+  const questions = area.questions;
+  const q = questions[currentQuestionIdx];
+  const totalQ = selectedAreas.reduce((sum, a) => sum + AREAS[a].questions.length, 0);
+  const doneQ = selectedAreas.slice(0, currentAreaIdx).reduce((sum, a) => sum + AREAS[a].questions.length, 0) + currentQuestionIdx;
+
+  // Progress
+  document.getElementById('q-progress-label').textContent =
+    `Área ${currentAreaIdx + 1} de ${selectedAreas.length} · Pergunta ${currentQuestionIdx + 1} de ${questions.length}`;
+  document.getElementById('q-progress-fill').style.width = Math.round((doneQ / totalQ) * 100) + '%';
+
+  // Area tag
+  document.getElementById('q-area-tag').textContent = area.icon + ' ' + area.name;
+
+  // Question
+  document.getElementById('q-text').textContent = q;
+
+  // Reset axes
+  currentLike = null;
+  currentDo = null;
+  // Check if already answered
+  const existing = answers[areaKey][currentQuestionIdx];
+  if (existing) {
+    currentLike = existing.like;
+    currentDo = existing.do;
+  }
+  updateAxisButtons();
+  updateNextBtn();
+
+  // Back button
+  document.getElementById('q-back-btn').disabled = (currentAreaIdx === 0 && currentQuestionIdx === 0);
+
+  // Animate card
+  const card = document.getElementById('q-card');
+  card.style.animation = 'none';
+  card.offsetHeight; // reflow
+  card.style.animation = 'fadeUp 0.4s ease both';
+}
+
+function selectAxis(axis, val) {
+  if (axis === 'like') currentLike = val;
+  else currentDo = val;
+  updateAxisButtons();
+  updateNextBtn();
+}
+
+function updateAxisButtons() {
+  ['like-yes','like-no'].forEach(id => document.getElementById(id).className = 'axis-btn');
+  ['do-yes','do-no'].forEach(id => document.getElementById(id).className = 'axis-btn');
+  if (currentLike === 'yes') document.getElementById('like-yes').classList.add('selected-yes');
+  if (currentLike === 'no') document.getElementById('like-no').classList.add('selected-no');
+  if (currentDo === 'yes') document.getElementById('do-yes').classList.add('selected-yes');
+  if (currentDo === 'no') document.getElementById('do-no').classList.add('selected-no');
+}
+
+function updateNextBtn() {
+  document.getElementById('q-next-btn').disabled = !(currentLike && currentDo);
+}
+
+function nextQuestion() {
+  if (!currentLike || !currentDo) return;
+  const areaKey = selectedAreas[currentAreaIdx];
+  answers[areaKey][currentQuestionIdx] = { like: currentLike, do: currentDo };
+
+  const area = AREAS[areaKey];
+  if (currentQuestionIdx < area.questions.length - 1) {
+    currentQuestionIdx++;
+    renderQuestion();
+  } else if (currentAreaIdx < selectedAreas.length - 1) {
+    currentAreaIdx++;
+    currentQuestionIdx = 0;
+    renderQuestion();
+  } else {
+    buildResults();
+    showScreen('s-results');
+  }
+}
+
+function prevQuestion() {
+  if (currentQuestionIdx > 0) {
+    currentQuestionIdx--;
+  } else if (currentAreaIdx > 0) {
+    currentAreaIdx--;
+    currentQuestionIdx = AREAS[selectedAreas[currentAreaIdx]].questions.length - 1;
+  }
+  renderQuestion();
+}
+
+// ============================================================
+// RESULTS
+// ============================================================
+function buildResults() {
+  document.getElementById('result-greeting').innerHTML =
+    `Aqui está o seu mapa, <strong>${userName}</strong>. Olha com calma — não tem julgamento aqui, só o que você trouxe.`;
+
+  const container = document.getElementById('result-areas');
+  container.innerHTML = '';
+
+  let totalAligned = 0, totalBlocked = 0, totalAuto = 0;
+
+  selectedAreas.forEach(areaKey => {
+    const area = AREAS[areaKey];
+    const ans = answers[areaKey] || [];
+    const questions = area.questions;
+
+    let aligned = [], blocked = [], auto = [], consistent = [];
+
+    ans.forEach((a, i) => {
+      const q = questions[i];
+      if (!a) return;
+      if (a.like === 'yes' && a.do === 'yes') aligned.push(q);
+      else if (a.like === 'yes' && a.do === 'no') blocked.push(q);
+      else if (a.like === 'no' && a.do === 'yes') auto.push(q);
+      else consistent.push(q);
+    });
+
+    totalAligned += aligned.length;
+    totalBlocked += blocked.length;
+    totalAuto += auto.length;
+
+    // Score: aligned / total answered
+    const total = ans.filter(Boolean).length;
+    const score = total > 0 ? Math.round((aligned.length / total) * 100) : 0;
+
+    let thermoColor, thermoDesc, thermoLevel;
+    if (score >= 70) { thermoColor = '#6b8c6e'; thermoDesc = THERMO_TEXT.high; thermoLevel = 'alto'; }
+    else if (score >= 40) { thermoColor = '#c9922a'; thermoDesc = THERMO_TEXT.mid; thermoLevel = 'médio'; }
+    else { thermoColor = '#c4613a'; thermoDesc = THERMO_TEXT.low; thermoLevel = 'baixo'; }
+
+    const card = document.createElement('div');
+    card.className = 'result-area-card au';
+
+    let html = `
+      <div class="result-area-header">
+        <span class="result-area-icon">${area.icon}</span>
+        <div class="result-area-name">${area.name}</div>
+      </div>
+      <div class="thermo-wrap">
+        <div class="thermo-label-row"><span>Alinhamento</span><span>${score}%</span></div>
+        <div class="thermo-track"><div class="thermo-fill" style="width:${score}%;background:${thermoColor}"></div></div>
+        <div class="thermo-desc">${thermoDesc}</div>
+      </div>`;
+
+    if (blocked.length > 0) {
+      html += `<div class="quadrant-section q-blocked">
+        <div class="quadrant-title"><div class="quadrant-dot"></div>Você gosta mas não faz</div>
+        <div class="quadrant-items">${blocked.map(q => `<div class="quadrant-item">${q}</div>`).join('')}</div>
+        <div class="quadrant-text">${QUADRANT_TEXTS.blocked}</div>
+      </div>`;
+    }
+
+    if (auto.length > 0) {
+      html += `<div class="quadrant-section q-auto">
+        <div class="quadrant-title"><div class="quadrant-dot"></div>Você faz mas não gosta</div>
+        <div class="quadrant-items">${auto.map(q => `<div class="quadrant-item">${q}</div>`).join('')}</div>
+        <div class="quadrant-text">${QUADRANT_TEXTS.auto}</div>
+      </div>`;
+    }
+
+    if (aligned.length > 0) {
+      html += `<div class="quadrant-section q-aligned">
+        <div class="quadrant-title"><div class="quadrant-dot"></div>Alinhado — você gosta e faz</div>
+        <div class="quadrant-items">${aligned.map(q => `<div class="quadrant-item">${q}</div>`).join('')}</div>
+        <div class="quadrant-text">${QUADRANT_TEXTS.aligned}</div>
+      </div>`;
+    }
+
+    html += '</div>';
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+
+  // General analysis
+  let generalText = '';
+  if (totalBlocked > totalAuto && totalBlocked > 3) {
+    generalText = `${userName}, seu mapa mostra algo que muita gente carrega sem perceber: você sabe o que quer, mas algo entre o querer e o fazer está travado. Isso não é falta de força de vontade — costuma ter raízes mais fundas, em medos, em padrões relacionais, em crenças que foram se instalando ao longo do tempo. Reconhecer isso é o primeiro passo. O segundo é ter apoio pra trabalhar.`;
+  } else if (totalAuto > totalBlocked && totalAuto > 3) {
+    generalText = `${userName}, seu mapa revela um padrão de funcionamento automático em várias áreas. Você age, produz, cuida — mas parte do que faz não te representa de verdade. Esse tipo de desalinhamento costuma gerar esgotamento silencioso, aquele cansaço que não passa mesmo com descanso. Você não precisa continuar sozinho(a) com isso.`;
+  } else if (totalBlocked + totalAuto > 5) {
+    generalText = `${userName}, seu mapa mostra áreas com tensão real — uma mistura de coisas que você quer fazer mas não consegue, e coisas que faz mas não quer mais. Isso é muita coisa pra gerir sozinho(a). A boa notícia é que enxergar esses padrões é o que torna possível trabalhar com eles.`;
+  } else {
+    generalText = `${userName}, seu mapa mostra um bom nível de alinhamento em várias áreas. Isso não significa que está tudo resolvido — mas que você tem construído, de alguma forma, uma vida que combina com quem você é. Se alguma área específica chamou atenção, esse é o ponto de partida.`;
+  }
+
+  document.getElementById('result-general').textContent = generalText;
+}
+
+// ============================================================
+// CTA + RESTART
+// ============================================================
+function goWhatsApp() {
+  const msg = encodeURIComponent(`Olá, Stefane! Fiz o Mapa da Vida Equilibrada e quero entender meus resultados mais a fundo na psicoterapia.`);
+  window.open(`https://wa.me/5521981673673?text=${msg}`, '_blank');
+}
+
+function restart() {
+  document.querySelectorAll('.area-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('inp-name').value = '';
+  userName = ''; selectedAreas = []; answers = {};
+  currentAreaIdx = 0; currentQuestionIdx = 0;
+  showScreen('s-welcome');
+}
+</script>
+</body>
+</html>
